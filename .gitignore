@@ -1,0 +1,52 @@
+# =============================================================
+# Metro de Medellín — ML Pipeline  |  .gitignore
+# Regenerar todo con: python run_pipeline.py
+# =============================================================
+
+# --- Modelos entrenados (binarios grandes, se regeneran) -----
+data/output/model_lgbm.pkl
+data/output/models_per_line.pkl
+
+# --- Datos procesados (se regeneran con 01_etl + 02_features) -
+data/processed/trusted.parquet
+data/processed/featured.parquet
+data/processed/label_encoders.json
+
+# --- Claude Code (configuración interna, no es del proyecto) --
+.claude/
+
+# --- Python ---------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.env
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# --- OS -------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Jupyter --------------------------------------------------
+.ipynb_checkpoints/
+
+# =============================================================
+# LO QUE SÍ SE SUBE (referencia):
+#   data/raw/afluencia-metro.csv        <- fuente de datos
+#   data/output/predictions.csv         <- resultados (compañero viz)
+#   data/output/metrics.json            <- métricas completas
+#   data/output/feature_importance.csv  <- importancia de features
+#   data/output/metro_dashboard.html    <- dashboard final
+#   data/output/eda_notes.md            <- documentación EDA
+#   src/*.py                            <- pipeline completo
+#   run_pipeline.py                     <- punto de entrada
+#   requirements.txt                    <- dependencias
+#   README.md                           <- documentación
+# =============================================================

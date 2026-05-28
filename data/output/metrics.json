@@ -1,0 +1,434 @@
+{
+  "Baseline": {
+    "global": {
+      "mae": 774.83,
+      "rmse": 3309.41,
+      "r2": 0.8982,
+      "n": 57344
+    },
+    "por_linea": {
+      "LÍNEA 1": {
+        "mae": 842.47,
+        "rmse": 1625.14
+      },
+      "LÍNEA 2": {
+        "mae": 172.69,
+        "rmse": 318.99
+      },
+      "LÍNEA A": {
+        "mae": 5360.26,
+        "rmse": 10563.34
+      },
+      "LÍNEA B": {
+        "mae": 754.99,
+        "rmse": 1415.28
+      },
+      "LÍNEA H": {
+        "mae": 47.46,
+        "rmse": 339.54
+      },
+      "LÍNEA J": {
+        "mae": 85.98,
+        "rmse": 188.08
+      },
+      "LÍNEA K": {
+        "mae": 123.35,
+        "rmse": 238.24
+      },
+      "LÍNEA L": {
+        "mae": 102.7,
+        "rmse": 202.31
+      },
+      "LÍNEA M": {
+        "mae": 77.53,
+        "rmse": 199.06
+      },
+      "LÍNEA O": {
+        "mae": 231.47,
+        "rmse": 345.74
+      },
+      "LÍNEA P": {
+        "mae": 150.3,
+        "rmse": 302.24
+      },
+      "LÍNEA T-A": {
+        "mae": 484.63,
+        "rmse": 822.54
+      }
+    },
+    "festivos": {
+      "festivo": {
+        "mae": 2201.35,
+        "rmse": 6610.87,
+        "n": 2760
+      },
+      "normal": {
+        "mae": 702.7,
+        "rmse": 3048.96,
+        "n": 54584
+      }
+    },
+    "mejora_mae_vs_baseline_pct": 0.0,
+    "mejora_rmse_vs_baseline_pct": 0.0
+  },
+  "RidgeBaseline": {
+    "global": {
+      "mae": 1872.26,
+      "rmse": 8441.95,
+      "r2": 0.3373,
+      "n": 57344
+    },
+    "por_linea": {
+      "LÍNEA 1": {
+        "mae": 1484.61,
+        "rmse": 1993.97
+      },
+      "LÍNEA 2": {
+        "mae": 368.59,
+        "rmse": 495.61
+      },
+      "LÍNEA A": {
+        "mae": 14275.88,
+        "rmse": 27453.01
+      },
+      "LÍNEA B": {
+        "mae": 1436.44,
+        "rmse": 1945.28
+      },
+      "LÍNEA H": {
+        "mae": 68.24,
+        "rmse": 125.57
+      },
+      "LÍNEA J": {
+        "mae": 348.39,
+        "rmse": 540.66
+      },
+      "LÍNEA K": {
+        "mae": 405.62,
+        "rmse": 556.34
+      },
+      "LÍNEA L": {
+        "mae": 122.9,
+        "rmse": 173.04
+      },
+      "LÍNEA M": {
+        "mae": 201.62,
+        "rmse": 254.87
+      },
+      "LÍNEA O": {
+        "mae": 343.72,
+        "rmse": 444.09
+      },
+      "LÍNEA P": {
+        "mae": 375.94,
+        "rmse": 630.29
+      },
+      "LÍNEA T-A": {
+        "mae": 904.75,
+        "rmse": 1156.18
+      }
+    },
+    "festivos": {
+      "festivo": {
+        "mae": 1604.82,
+        "rmse": 5166.27,
+        "n": 2760
+      },
+      "normal": {
+        "mae": 1885.78,
+        "rmse": 8574.41,
+        "n": 54584
+      }
+    },
+    "mejora_mae_vs_baseline_pct": -141.63,
+    "mejora_rmse_vs_baseline_pct": -155.09
+  },
+  "RandomForest": {
+    "global": {
+      "mae": 905.39,
+      "rmse": 3929.98,
+      "r2": 0.8564,
+      "n": 57344
+    },
+    "por_linea": {
+      "LÍNEA 1": {
+        "mae": 948.22,
+        "rmse": 1764.08
+      },
+      "LÍNEA 2": {
+        "mae": 200.92,
+        "rmse": 348.66
+      },
+      "LÍNEA A": {
+        "mae": 6473.3,
+        "rmse": 12595.59
+      },
+      "LÍNEA B": {
+        "mae": 882.01,
+        "rmse": 1615.83
+      },
+      "LÍNEA H": {
+        "mae": 17.53,
+        "rmse": 32.82
+      },
+      "LÍNEA J": {
+        "mae": 98.43,
+        "rmse": 199.6
+      },
+      "LÍNEA K": {
+        "mae": 128.83,
+        "rmse": 216.66
+      },
+      "LÍNEA L": {
+        "mae": 85.95,
+        "rmse": 127.9
+      },
+      "LÍNEA M": {
+        "mae": 80.11,
+        "rmse": 137.81
+      },
+      "LÍNEA O": {
+        "mae": 222.76,
+        "rmse": 349.19
+      },
+      "LÍNEA P": {
+        "mae": 150.77,
+        "rmse": 289.65
+      },
+      "LÍNEA T-A": {
+        "mae": 533.48,
+        "rmse": 904.41
+      }
+    },
+    "festivos": {
+      "festivo": {
+        "mae": 1175.77,
+        "rmse": 5097.88,
+        "n": 2760
+      },
+      "normal": {
+        "mae": 891.72,
+        "rmse": 3861.56,
+        "n": 54584
+      }
+    },
+    "mejora_mae_vs_baseline_pct": -16.85,
+    "mejora_rmse_vs_baseline_pct": -18.75
+  },
+  "LightGBM": {
+    "global": {
+      "mae": 890.25,
+      "rmse": 3616.57,
+      "r2": 0.8784,
+      "n": 57344
+    },
+    "por_linea": {
+      "LÍNEA 1": {
+        "mae": 919.31,
+        "rmse": 1673.88
+      },
+      "LÍNEA 2": {
+        "mae": 190.42,
+        "rmse": 332.74
+      },
+      "LÍNEA A": {
+        "mae": 6372.11,
+        "rmse": 11565.62
+      },
+      "LÍNEA B": {
+        "mae": 871.69,
+        "rmse": 1563.8
+      },
+      "LÍNEA H": {
+        "mae": 18.28,
+        "rmse": 36.37
+      },
+      "LÍNEA J": {
+        "mae": 104.72,
+        "rmse": 230.37
+      },
+      "LÍNEA K": {
+        "mae": 139.12,
+        "rmse": 260.39
+      },
+      "LÍNEA L": {
+        "mae": 81.47,
+        "rmse": 120.7
+      },
+      "LÍNEA M": {
+        "mae": 81.28,
+        "rmse": 142.34
+      },
+      "LÍNEA O": {
+        "mae": 211.11,
+        "rmse": 337.16
+      },
+      "LÍNEA P": {
+        "mae": 157.52,
+        "rmse": 304.85
+      },
+      "LÍNEA T-A": {
+        "mae": 513.66,
+        "rmse": 894.1
+      }
+    },
+    "festivos": {
+      "festivo": {
+        "mae": 1174.49,
+        "rmse": 4966.82,
+        "n": 2760
+      },
+      "normal": {
+        "mae": 875.88,
+        "rmse": 3534.63,
+        "n": 54584
+      }
+    },
+    "mejora_mae_vs_baseline_pct": -14.9,
+    "mejora_rmse_vs_baseline_pct": -9.28
+  },
+  "XGBoost": {
+    "global": {
+      "mae": 865.93,
+      "rmse": 3527.23,
+      "r2": 0.8843,
+      "n": 57344
+    },
+    "por_linea": {
+      "LÍNEA 1": {
+        "mae": 893.74,
+        "rmse": 1618.27
+      },
+      "LÍNEA 2": {
+        "mae": 189.79,
+        "rmse": 328.58
+      },
+      "LÍNEA A": {
+        "mae": 6187.65,
+        "rmse": 11285.61
+      },
+      "LÍNEA B": {
+        "mae": 847.25,
+        "rmse": 1512.35
+      },
+      "LÍNEA H": {
+        "mae": 18.38,
+        "rmse": 34.55
+      },
+      "LÍNEA J": {
+        "mae": 99.15,
+        "rmse": 209.99
+      },
+      "LÍNEA K": {
+        "mae": 133.7,
+        "rmse": 234.46
+      },
+      "LÍNEA L": {
+        "mae": 85.27,
+        "rmse": 124.65
+      },
+      "LÍNEA M": {
+        "mae": 80.79,
+        "rmse": 138.78
+      },
+      "LÍNEA O": {
+        "mae": 212.49,
+        "rmse": 334.26
+      },
+      "LÍNEA P": {
+        "mae": 153.63,
+        "rmse": 292.22
+      },
+      "LÍNEA T-A": {
+        "mae": 498.28,
+        "rmse": 852.31
+      }
+    },
+    "festivos": {
+      "festivo": {
+        "mae": 1174.9,
+        "rmse": 5054.71,
+        "n": 2760
+      },
+      "normal": {
+        "mae": 850.31,
+        "rmse": 3431.99,
+        "n": 54584
+      }
+    },
+    "mejora_mae_vs_baseline_pct": -11.76,
+    "mejora_rmse_vs_baseline_pct": -6.58
+  },
+  "LGB_PerLinea": {
+    "global": {
+      "mae": 887.4,
+      "rmse": 3586.94,
+      "r2": 0.8804,
+      "n": 57344
+    },
+    "por_linea": {
+      "LÍNEA 1": {
+        "mae": 1003.18,
+        "rmse": 1691.45
+      },
+      "LÍNEA 2": {
+        "mae": 181.8,
+        "rmse": 322.44
+      },
+      "LÍNEA A": {
+        "mae": 6263.99,
+        "rmse": 11475.88
+      },
+      "LÍNEA B": {
+        "mae": 844.76,
+        "rmse": 1487.33
+      },
+      "LÍNEA H": {
+        "mae": 18.16,
+        "rmse": 35.44
+      },
+      "LÍNEA J": {
+        "mae": 108.0,
+        "rmse": 216.8
+      },
+      "LÍNEA K": {
+        "mae": 136.26,
+        "rmse": 238.12
+      },
+      "LÍNEA L": {
+        "mae": 81.66,
+        "rmse": 122.43
+      },
+      "LÍNEA M": {
+        "mae": 82.28,
+        "rmse": 135.48
+      },
+      "LÍNEA O": {
+        "mae": 202.52,
+        "rmse": 329.46
+      },
+      "LÍNEA P": {
+        "mae": 156.52,
+        "rmse": 302.54
+      },
+      "LÍNEA T-A": {
+        "mae": 551.11,
+        "rmse": 884.32
+      }
+    },
+    "festivos": {
+      "festivo": {
+        "mae": 1180.6,
+        "rmse": 4990.35,
+        "n": 2760
+      },
+      "normal": {
+        "mae": 872.57,
+        "rmse": 3501.07,
+        "n": 54584
+      }
+    },
+    "mejora_mae_vs_baseline_pct": -14.53,
+    "mejora_rmse_vs_baseline_pct": -8.39
+  }
+}
