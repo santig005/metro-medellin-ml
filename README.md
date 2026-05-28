@@ -23,14 +23,15 @@ metro-medellin-ml/
 │       ├── feature_importance.csv       # Importancia de features — LightGBM
 │       ├── model_lgbm.pkl               # Modelo LightGBM global serializado
 │       ├── models_per_line.pkl          # Dict con 12 LightGBM por línea
-│       ├── metro_dashboard.html         # Dashboard interactivo (~0.9 MB, autocontenido)
+│       ├── metro_dashboard.html         # Dashboard interactivo (~0.96 MB, autocontenido)
 │       └── eda_notes.md                 # Hallazgos documentados durante el EDA
 ├── src/
 │   ├── 01_etl.py                        # Carga, limpieza y parseo de fechas
 │   ├── 02_features.py                   # Feature engineering completo
 │   ├── 03_models.py                     # Entrenamiento y evaluación de modelos
-│   └── 04_dashboard.py                  # Construcción del dashboard en HTML
-├── run_pipeline.py                      # Orquestador: ejecuta los 4 pasos en secuencia
+│   ├── 04_dashboard.py                  # Construcción del dashboard en HTML
+│   └── 05_aws_upload.py                 # Subida de artefactos a S3 (solo si METRO_MODE=aws)
+├── run_pipeline.py                      # Orquestador: ejecuta los 5 pasos en secuencia
 └── requirements.txt
 ```
 
@@ -50,6 +51,14 @@ python -X utf8 src/01_etl.py
 python -X utf8 src/02_features.py
 python -X utf8 src/03_models.py
 python -X utf8 src/04_dashboard.py
+python -X utf8 src/05_aws_upload.py   # Solo activo si METRO_MODE=aws
+
+# Walk-forward cross-validation (no modifica predictions.csv ni metrics.json)
+python -X utf8 src/03_models.py --cv
+
+# Subida a S3 en entorno AWS EMR
+set METRO_MODE=aws
+python run_pipeline.py
 ```
 
 > **Nota Windows:** el flag `-X utf8` es necesario para que los prints con tildes y eñes no fallen en consolas con codificación cp1252.
@@ -72,7 +81,7 @@ Transformaciones principales:
 
 ### Paso 2 — Feature Engineering (`02_features.py`)
 
-Construye 28 columnas adicionales sin introducir data leakage.
+Construye 27 columnas adicionales sin introducir data leakage.
 
 | Grupo | Features |
 |-------|----------|
@@ -101,15 +110,17 @@ Los modelos se entrenan con el target en escala `log1p` y las predicciones se re
 **Modelos entrenados:**
 
 1. **Baseline** — tabla de lookup: promedio histórico por `(línea, hora, día_semana)` sobre el train completo. No usa features temporales ni lags; es el punto de referencia.
-2. **Random Forest** — 200 árboles, profundidad máxima 15, entrenado en log-escala.
-3. **LightGBM global** — 2000 estimadores, learning rate 0.02, early stopping en validación. Features categóricas explícitas para `linea_encoded`, `tipo_linea_encoded`, `dia_semana`, `mes`, `hora_del_dia`.
-4. **XGBoost** — configuración simétrica a LightGBM. Early stopping con `eval_metric=mae`.
-5. **LightGBM por línea** — 12 modelos independientes (uno por línea). Guardados como dict serializado en `models_per_line.pkl`.
-6. **LightGBM sin dia_del_año** — ablation test condicional: solo corre si LGB_PerLinea no supera al baseline, para verificar que `dia_del_año` no introduce leakage estacional.
+2. **RidgeBaseline** — regresión lineal regularizada (`Ridge(alpha=1.0)`) con `ColumnTransformer`: OHE para features categóricas (`linea_encoded`, `tipo_linea_encoded`) y `StandardScaler` + `SimpleImputer` para las numéricas. Incluido como baseline lineal para confirmar que el problema requiere modelos no lineales.
+3. **Random Forest** — 200 árboles, profundidad máxima 15, entrenado en log-escala.
+4. **LightGBM global** — 2000 estimadores, learning rate 0.02, early stopping en validación. Features categóricas explícitas para `linea_encoded`, `tipo_linea_encoded`, `dia_semana`, `mes`, `hora_del_dia`.
+5. **XGBoost** — configuración simétrica a LightGBM. Early stopping con `eval_metric=mae`.
+6. **LightGBM por línea** — 12 modelos independientes (uno por línea). Guardados como dict serializado en `models_per_line.pkl`.
+
+El script también expone un modo de walk-forward cross-validation independiente (flag `--cv`) que no escribe a `predictions.csv` ni `metrics.json`.
 
 ### Paso 4 — Dashboard (`04_dashboard.py`)
 
-Genera un HTML autocontenido con 13 secciones usando Plotly. No requiere servidor ni conexión a internet. Todas las figuras están embebidas como JSON en el HTML.
+Genera un HTML autocontenido con 14 secciones usando Plotly. No requiere servidor ni conexión a internet. Todas las figuras están embebidas como JSON en el HTML.
 
 Secciones del dashboard:
 1. KPIs — modelo ganador (XGBoost) vs baseline
@@ -123,8 +134,13 @@ Secciones del dashboard:
 9. **Festivos: MAE agrupado** (Baseline vs ML)
 10. **Festivos: desglose por día individual**
 11. **Tendencia interanual** (Jan–Sep comparable, 3 años)
-12. **Comparación per-line vs baseline** por línea
+12. **Comparación global vs equal-weight por línea**
 13. Mejora porcentual de LGB_PerLinea vs baseline por línea
+14. **★ Walk-forward Cross-Validation** — gráfico de línea por fold + tabla de resultados
+
+### Paso 5 — AWS Upload (`05_aws_upload.py`)
+
+Sube los 7 artefactos de output a `s3://metro-medellin-datalake/` usando `boto3`. Solo se ejecuta cuando `METRO_MODE=aws`; en modo local imprime un aviso y termina sin error. Artefactos subidos: `trusted.parquet`, `featured.parquet`, `predictions.csv`, `metrics.json`, `feature_importance.csv`, `metro_dashboard.html` (con `ContentType=text/html`) y `model_lgbm.pkl`.
 
 ---
 
@@ -139,6 +155,7 @@ Secciones del dashboard:
 | LGB_PerLinea | 887.4 | 3,587 | 0.880 | 802.5 |
 | LightGBM | 890.2 | 3,617 | 0.878 | — |
 | RandomForest | 905.4 | 3,930 | 0.856 | — |
+| RidgeBaseline | 1,872.3 | 8,442 | 0.337 | — |
 
 El baseline gana porque LÍNEA A (demanda promedio ~30k) domina el MAE global y es muy predecible con el promedio histórico. El MAE "equal-weight" pondera cada línea igual, pero el baseline sigue siendo el mejor.
 
@@ -152,6 +169,17 @@ El baseline gana porque LÍNEA A (demanda promedio ~30k) domina el MAE global y 
 En los **10 festivos "quietos"** (demanda real 29–52% de lo normal) el baseline promedia MAE=2,751 y LightGBM promedia MAE=285. El ML es ~10 veces más preciso.
 
 Los **4 festivos "activos"** (Ascensión 120%, Batalla de Boyacá 118%, Todos los Santos 112%, Inmaculada Concepción 132%) fallan en ambos modelos: el modelo aprendió que festivo implica menos demanda, y estos cuatro tienen demanda igual o mayor que un día normal por motivos cívicos o culturales.
+
+### Walk-forward Cross-Validation (4 folds, ventana expandible)
+
+| Fold | Período test | Baseline MAE | LightGBM MAE | Ganador |
+|------|-------------|-------------|-------------|---------|
+| 1 | Nov–Dic 2023 | 446.2 | 500.5 | Baseline |
+| 2 | Mar–Jun 2024 | 640.6 | 454.2 | LightGBM |
+| 3 | Jul–Sep 2024 | 420.2 | 362.1 | LightGBM |
+| 4 | Oct–Dic 2024 | 557.9 | 371.1 | LightGBM |
+
+LightGBM gana en 3 de 4 folds. El CV score (diferencia promedio como % del MAE medio) es 13.7%, por debajo del umbral de 15% establecido como criterio de estabilidad. El fold 1 (Baseline gana) corresponde al período de menor variabilidad estacional del sistema; la ventana de entrenamiento en ese fold es la más pequeña y no incluye ningún festivo "activo" representativo.
 
 ---
 
@@ -193,6 +221,10 @@ Se entrenaron 12 LightGBM independientes esperando que cada uno capturara mejor 
 
 Se sospechaba que incluir el día del año podía crear leakage estacional (el modelo "aprendería" que el día 1 del año tiene demanda X sin generalizar). El ablation test (entrenar sin esa feature) mostró que el MAE empeora +7.2 puntos al quitarla. No hay leakage: la feature captura estacionalidad real sin memorizar fechas específicas.
 
+### H8 — RidgeBaseline confirma no-linealidad inter-línea
+
+Ridge Regression con OHE por línea alcanzó MAE=1,872, peor que el propio Baseline histórico (774). Incluso con `ColumnTransformer` que expone cada línea como variable dummy independiente, Ridge aprende un único coeficiente global para `lag_7d`. La interacción `lag_7d × línea` —que es exactamente lo que captura LGB_PerLinea con sus 12 modelos independientes— es inherentemente no lineal. Este resultado confirma que la estructura del problema requiere modelos de árbol o modelos separados por línea; un enfoque lineal global no es suficiente.
+
 ---
 
 ## Asunciones y decisiones de diseño
@@ -203,9 +235,13 @@ Se sospechaba que incluir el día del año podía crear leakage estacional (el m
 
 **Festivo vs. puente.** Se usó la librería `holidays.Colombia` que aplica automáticamente la Ley de Puentes (traslado al lunes siguiente para ciertos festivos). La feature `es_festivo` refleja el día oficial, y `es_puente` se deriva de los lunes resultantes de ese traslado. No se añadió una categoría de festivo (cívico, religioso, etc.) porque los datos de entrenamiento de 2023–2024 son insuficientes para aprender esa distinción de forma fiable.
 
+**Diseño de RidgeBaseline.** Se usó `ColumnTransformer` con OHE para `linea_encoded` y `tipo_linea_encoded` en lugar de pasarlos como enteros, porque tratarlos como ordinales introduciría una relación lineal espuria (línea 0 "más cerca" de línea 1 que de línea 11). Con OHE, Ridge puede aprender interceptos por línea. Aun así, los coeficientes de lag_7d y rolling_7d son globales — la no-linealidad entre líneas no es capturable sin interacciones explícitas o modelos separados.
+
 **Modelo ganador para el KPI del dashboard.** El dashboard muestra XGBoost como ganador porque tiene el menor MAE global entre los modelos ML (865.9). La sección de visualización temporal usa LightGBM porque su feature importance es interpretable (el modelo expone `gain` por feature de forma nativa), lo cual es más valioso para la presentación académica que XGBoost en esa sección.
 
-**Compatibilidad AWS EMR.** Los scripts usan `os.getenv("METRO_MODE", "local")` y rutas relativas al directorio de trabajo para permitir ejecución tanto en local como en un cluster EMR sin modificar código. Los modelos se serializan con `pickle` en formato compatible con Python 3.8+.
+**metrics.json generado desde predictions.csv.** Tras guardar `predictions.csv` a disco, las métricas se recalculan leyendo ese archivo y `featured.parquet`. Esto garantiza que el JSON siempre es consistente con las predicciones escritas y puede regenerarse de forma independiente.
+
+**Compatibilidad AWS EMR.** Los scripts usan `os.getenv("METRO_MODE", "local")` y rutas relativas al directorio de trabajo para permitir ejecución tanto en local como en un cluster EMR sin modificar código. Los modelos se serializan con `pickle` en formato compatible con Python 3.8+. `05_aws_upload.py` es un no-op en modo local para que `run_pipeline.py` no requiera credenciales AWS en desarrollo.
 
 ---
 
@@ -218,6 +254,8 @@ Se sospechaba que incluir el día del año podía crear leakage estacional (el m
 **`add_vline` de Plotly en versiones recientes.** La llamada `fig.add_vline()` lanzaba `TypeError` en la versión instalada. Se reemplazó con la API de bajo nivel: `fig.add_shape(type="line")` más `fig.add_annotation()` para la etiqueta.
 
 **Filas duplicadas en el CSV fuente.** Durante el EDA apareció lo que parecía un registro duplicado de LÍNEA B para el 1 de enero de 2024. Tras inspección resultó ser el registro del 1 de enero de 2023 con fecha mal capturada en el CSV original. Se corrigió directamente en el archivo fuente; no requirió cambios en el código.
+
+**NaN en Ridge por features de lag.** `hacer_split` descarta NaN solo en las columnas `["pasajeros", "lag_1d", "lag_7d", "rolling_7d"]`, dejando NaN en `lag_14d` y `rolling_28d` para las primeras filas de cada serie. Ridge lanzaba `ValueError: Input X contains NaN`. Se resolvió incluyendo `SimpleImputer(strategy="median")` en el `Pipeline` de preprocesamiento.
 
 **Métricas de festivos con pocas muestras.** Algunos festivos tienen muy pocos registros en el test (especialmente los de noviembre y diciembre 2025, donde el dataset llega solo hasta el 9 de diciembre). Las métricas por día individual deben interpretarse con cautela para esos casos; por eso se añade `n_registros` en el JSON de métricas.
 
