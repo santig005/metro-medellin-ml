@@ -4,7 +4,7 @@
 # =============================================================
 
 # --- Modelos entrenados (binarios grandes, se regeneran) -----
-data/output/model_lgbm.pkl
+# model_lgbm.pkl se sube al repo para que la API pueda servirse sin regenerar
 data/output/models_per_line.pkl
 
 # --- Datos procesados (se regeneran con 01_etl + 02_features) -
