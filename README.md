@@ -30,7 +30,11 @@ metro-medellin-ml/
 │   ├── 02_features.py                   # Feature engineering completo
 │   ├── 03_models.py                     # Entrenamiento y evaluación de modelos
 │   ├── 04_dashboard.py                  # Construcción del dashboard en HTML
-│   └── 05_aws_upload.py                 # Subida de artefactos a S3 (solo si METRO_MODE=aws)
+│   ├── 05_aws_upload.py                 # Subida de artefactos a S3 (solo si METRO_MODE=aws)
+│   └── 06_api.py                        # FastAPI para servir predicciones (uvicorn)
+├── experiments/
+│   └── tune_hyperparams.py              # Optuna tuning LightGBM + XGBoost (no toca pipeline)
+├── app.py                               # Dashboard Streamlit (Streamlit Cloud)
 ├── run_pipeline.py                      # Orquestador: ejecuta los 5 pasos en secuencia
 └── requirements.txt
 ```
@@ -55,6 +59,15 @@ python -X utf8 src/05_aws_upload.py   # Solo activo si METRO_MODE=aws
 
 # Walk-forward cross-validation (no modifica predictions.csv ni metrics.json)
 python -X utf8 src/03_models.py --cv
+
+# Experimento de tuning de hiperparámetros (no modifica el pipeline)
+python experiments/tune_hyperparams.py
+
+# API de predicción (FastAPI + uvicorn)
+uvicorn src.06_api:app --reload --port 8000
+
+# Dashboard Streamlit (desarrollo local)
+streamlit run app.py
 
 # Subida a S3 en entorno AWS EMR
 set METRO_MODE=aws
@@ -113,7 +126,7 @@ Los modelos se entrenan con el target en escala `log1p` y las predicciones se re
 2. **RidgeBaseline** — regresión lineal regularizada (`Ridge(alpha=1.0)`) con `ColumnTransformer`: OHE para features categóricas (`linea_encoded`, `tipo_linea_encoded`) y `StandardScaler` + `SimpleImputer` para las numéricas. Incluido como baseline lineal para confirmar que el problema requiere modelos no lineales.
 3. **Random Forest** — 200 árboles, profundidad máxima 15, entrenado en log-escala.
 4. **LightGBM global** — 2000 estimadores, learning rate 0.02, early stopping en validación. Features categóricas explícitas para `linea_encoded`, `tipo_linea_encoded`, `dia_semana`, `mes`, `hora_del_dia`.
-5. **XGBoost** — configuración simétrica a LightGBM. Early stopping con `eval_metric=mae`.
+5. **XGBoost** — hiperparámetros optimizados con Optuna (50 trials, expanding window CV). Early stopping con `eval_metric=mae`. Ver detalles en la [sección de tuning](#hiperparámetros-xgboost--optuna-tuning).
 6. **LightGBM por línea** — 12 modelos independientes (uno por línea). Guardados como dict serializado en `models_per_line.pkl`.
 
 El script también expone un modo de walk-forward cross-validation independiente (flag `--cv`) que no escribe a `predictions.csv` ni `metrics.json`.
@@ -151,11 +164,13 @@ Sube los 7 artefactos de output a `s3://metro-medellin-datalake/` usando `boto3`
 | Modelo | MAE | RMSE | R² | MAE equal-weight |
 |--------|-----|------|----|-----------------|
 | **Baseline** | **774.8** | 3,309 | 0.898 | **702.8** |
-| XGBoost | 865.9 | 3,527 | 0.884 | 783.3 |
+| **XGBoost** ⚡ | **839.3** | **3,416** | **0.892** | — |
 | LGB_PerLinea | 887.4 | 3,587 | 0.880 | 802.5 |
 | LightGBM | 890.2 | 3,617 | 0.878 | — |
 | RandomForest | 905.4 | 3,930 | 0.856 | — |
 | RidgeBaseline | 1,872.3 | 8,442 | 0.337 | — |
+
+⚡ XGBoost tuneado con Optuna — ver [sección de hiperparámetros](#hiperparámetros-xgboost--optuna-tuning).
 
 El baseline gana porque LÍNEA A (demanda promedio ~30k) domina el MAE global y es muy predecible con el promedio histórico. El MAE "equal-weight" pondera cada línea igual, pero el baseline sigue siendo el mejor.
 
@@ -180,6 +195,36 @@ Los **4 festivos "activos"** (Ascensión 120%, Batalla de Boyacá 118%, Todos lo
 | 4 | Oct–Dic 2024 | 557.9 | 371.1 | LightGBM |
 
 LightGBM gana en 3 de 4 folds. El CV score (diferencia promedio como % del MAE medio) es 13.7%, por debajo del umbral de 15% establecido como criterio de estabilidad. El fold 1 (Baseline gana) corresponde al período de menor variabilidad estacional del sistema; la ventana de entrenamiento en ese fold es la más pequeña y no incluye ningún festivo "activo" representativo.
+
+### Hiperparámetros XGBoost — Optuna tuning
+
+El script `experiments/tune_hyperparams.py` corre 50 trials de Optuna sobre LightGBM y XGBoost usando expanding window CV (Fold 3 + Fold 4 del walkforward) como función objetivo. No modifica el pipeline ni escribe a `data/output/`.
+
+**Resultado del experimento (rama `experiment/hyperparameter-tuning`):**
+
+| Parámetro | Default | Tuneado | Efecto |
+|-----------|---------|---------|--------|
+| `max_depth` | 8 | **7** | Árbol ligeramente menos profundo — menor overfitting |
+| `learning_rate` | 0.02 | **0.0995** | 5× más agresivo — converge en menos árboles |
+| `n_estimators` | 2000 | **397** | 5× menos árboles — entrenamiento ~5× más rápido |
+| `subsample` | 0.8 | **0.961** | Mayor uso de datos por árbol |
+| `colsample_bytree` | 0.8 | **0.713** | Menos features por árbol — más regularización |
+
+**Impacto en el test set 2025:**
+
+| Métrica | Antes (defaults) | Después (tuneado) | Δ |
+|---------|-----------------|-------------------|---|
+| MAE global | 865.9 | **839.3** | −3.07% |
+| RMSE | 3,527 | **3,416** | −3.15% |
+| R² | 0.884 | **0.892** | +0.008 |
+| MAE festivos | 1,174.9 | **1,141.1** | −2.88% |
+
+LightGBM empeoró con tuning (−6.2%): Optuna encontró `learning_rate=0.216` con 173 árboles, configuración que funciona bien en los folds 2024 pero no generaliza al test 2025 como el modelo con `lr=0.02` y 2000 árboles con early stopping.
+
+```bash
+# Reproducir el experimento (requiere featured.parquet generado)
+python experiments/tune_hyperparams.py
+```
 
 ---
 
@@ -237,7 +282,7 @@ Ridge Regression con OHE por línea alcanzó MAE=1,872, peor que el propio Basel
 
 **Diseño de RidgeBaseline.** Se usó `ColumnTransformer` con OHE para `linea_encoded` y `tipo_linea_encoded` en lugar de pasarlos como enteros, porque tratarlos como ordinales introduciría una relación lineal espuria (línea 0 "más cerca" de línea 1 que de línea 11). Con OHE, Ridge puede aprender interceptos por línea. Aun así, los coeficientes de lag_7d y rolling_7d son globales — la no-linealidad entre líneas no es capturable sin interacciones explícitas o modelos separados.
 
-**Modelo ganador para el KPI del dashboard.** El dashboard muestra XGBoost como ganador porque tiene el menor MAE global entre los modelos ML (865.9). La sección de visualización temporal usa LightGBM porque su feature importance es interpretable (el modelo expone `gain` por feature de forma nativa), lo cual es más valioso para la presentación académica que XGBoost en esa sección.
+**Modelo ganador para el KPI del dashboard.** El dashboard muestra XGBoost como ganador porque tiene el menor MAE global entre los modelos ML (839.3 post-tuning). La sección de visualización temporal usa LightGBM porque su feature importance es interpretable (el modelo expone `gain` por feature de forma nativa), lo cual es más valioso para la presentación académica que XGBoost en esa sección.
 
 **metrics.json generado desde predictions.csv.** Tras guardar `predictions.csv` a disco, las métricas se recalculan leyendo ese archivo y `featured.parquet`. Esto garantiza que el JSON siempre es consistente con las predicciones escritas y puede regenerarse de forma independiente.
 
