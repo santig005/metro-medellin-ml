@@ -273,12 +273,12 @@ def entrenar_lgbm(X_tr, y_tr, X_val, y_val, feature_cols: list) -> lgb.LGBMRegre
 def entrenar_xgb(X_tr, y_tr, X_val, y_val) -> xgb.XGBRegressor:
     print("[XGB] Entrenando XGBoost...")
     modelo = xgb.XGBRegressor(
-        n_estimators=2000,
-        learning_rate=0.02,
-        max_depth=8,
+        n_estimators=397,
+        learning_rate=0.0995,
+        max_depth=7,
         min_child_weight=10,
-        subsample=0.8,
-        colsample_bytree=0.8,
+        subsample=0.961,
+        colsample_bytree=0.713,
         random_state=42,
         n_jobs=-1,
         early_stopping_rounds=100,

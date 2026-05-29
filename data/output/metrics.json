@@ -289,75 +289,75 @@
   },
   "XGBoost": {
     "global": {
-      "mae": 865.93,
-      "rmse": 3527.23,
-      "r2": 0.8843,
+      "mae": 839.28,
+      "rmse": 3416.01,
+      "r2": 0.8915,
       "n": 57344
     },
     "por_linea": {
       "LÍNEA 1": {
-        "mae": 893.74,
-        "rmse": 1618.27
+        "mae": 896.49,
+        "rmse": 1610.91
       },
       "LÍNEA 2": {
-        "mae": 189.79,
-        "rmse": 328.58
+        "mae": 190.14,
+        "rmse": 326.88
       },
       "LÍNEA A": {
-        "mae": 6187.65,
-        "rmse": 11285.61
+        "mae": 5884.8,
+        "rmse": 10915.7
       },
       "LÍNEA B": {
-        "mae": 847.25,
-        "rmse": 1512.35
+        "mae": 846.24,
+        "rmse": 1498.52
       },
       "LÍNEA H": {
-        "mae": 18.38,
-        "rmse": 34.55
+        "mae": 19.31,
+        "rmse": 35.94
       },
       "LÍNEA J": {
-        "mae": 99.15,
-        "rmse": 209.99
+        "mae": 100.57,
+        "rmse": 207.3
       },
       "LÍNEA K": {
-        "mae": 133.7,
-        "rmse": 234.46
+        "mae": 135.34,
+        "rmse": 234.21
       },
       "LÍNEA L": {
-        "mae": 85.27,
-        "rmse": 124.65
+        "mae": 88.35,
+        "rmse": 127.56
       },
       "LÍNEA M": {
-        "mae": 80.79,
-        "rmse": 138.78
+        "mae": 82.18,
+        "rmse": 138.93
       },
       "LÍNEA O": {
-        "mae": 212.49,
-        "rmse": 334.26
+        "mae": 215.94,
+        "rmse": 337.95
       },
       "LÍNEA P": {
-        "mae": 153.63,
-        "rmse": 292.22
+        "mae": 155.26,
+        "rmse": 293.9
       },
       "LÍNEA T-A": {
-        "mae": 498.28,
-        "rmse": 852.31
+        "mae": 502.46,
+        "rmse": 849.91
       }
     },
     "festivos": {
       "festivo": {
-        "mae": 1174.9,
-        "rmse": 5054.71,
+        "mae": 1179.38,
+        "rmse": 4981.33,
         "n": 2760
       },
       "normal": {
-        "mae": 850.31,
-        "rmse": 3431.99,
+        "mae": 822.08,
+        "rmse": 3317.3,
         "n": 54584
       }
     },
-    "mejora_mae_vs_baseline_pct": -11.76,
-    "mejora_rmse_vs_baseline_pct": -6.58
+    "mejora_mae_vs_baseline_pct": -8.32,
+    "mejora_rmse_vs_baseline_pct": -3.22
   },
   "LGB_PerLinea": {
     "global": {
