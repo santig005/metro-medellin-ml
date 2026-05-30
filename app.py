@@ -337,7 +337,7 @@ def seccion_festivos(df: pd.DataFrame):
                 return "background-color: #f8d7da; color: #721c24"
         return ""
 
-    styled = tabla_cmp.style.applymap(colorear_mejora, subset=["Mejora %"])
+    styled = tabla_cmp.style.map(colorear_mejora, subset=["Mejora %"])
     st.dataframe(styled, use_container_width=True, hide_index=True)
 
     # — Gráfico de barras error por festivo —
