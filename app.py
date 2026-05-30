@@ -413,7 +413,23 @@ def seccion_tendencia(df: pd.DataFrame, metrics: dict):
     # — Gráfico de área: tendencia mensual 2025 (real) —
     st.markdown("#### Demanda mensual 2025 — valores reales")
 
-    df_real = df[df["modelo"] == "XGBoost"][["fecha", "real"]].copy()
+    df_real_all = df[df["modelo"] == "XGBoost"][["fecha", "real"]].copy()
+    fecha_min = df_real_all["fecha"].min().date()
+    fecha_max = df_real_all["fecha"].max().date()
+
+    import datetime as _dt
+    default_inicio = max(fecha_min, _dt.date(2025, 1, 1))
+    default_fin    = min(fecha_max, _dt.date(2025, 9, 30))
+
+    col_f1, col_f2 = st.columns(2)
+    filtro_inicio = col_f1.date_input("Desde", value=default_inicio, min_value=fecha_min, max_value=fecha_max, key="tend_desde")
+    filtro_fin    = col_f2.date_input("Hasta", value=default_fin,    min_value=fecha_min, max_value=fecha_max, key="tend_hasta")
+
+    df_real = df_real_all[
+        (df_real_all["fecha"].dt.date >= filtro_inicio) &
+        (df_real_all["fecha"].dt.date <= filtro_fin)
+    ].copy()
+
     df_mensual = (
         df_real.groupby(df_real["fecha"].dt.to_period("M"))["real"]
         .sum()
@@ -453,9 +469,9 @@ def seccion_tendencia(df: pd.DataFrame, metrics: dict):
         xaxis_title="Mes",
         yaxis_title="Total pasajeros",
         template="plotly_white",
-        height=380,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02),
-        margin=dict(t=60, b=40),
+        height=420,
+        legend=dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5),
+        margin=dict(t=60, b=80),
     )
     st.plotly_chart(fig_area, use_container_width=True)
 
