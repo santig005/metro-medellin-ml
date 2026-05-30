@@ -241,14 +241,21 @@ def seccion_explorador(df: pd.DataFrame):
         ))
 
     fig.update_layout(
-        title=f"Demanda real vs predicha — {modelo_sel}",
+        title=dict(
+            text=f"Demanda real vs predicha — {modelo_sel}",
+            y=0.97,
+            x=0,
+            xanchor="left",
+            yanchor="top",
+            font=dict(size=16),
+        ),
         xaxis_title="Fecha",
         yaxis_title="Pasajeros promedio / hora",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02),
+        legend=dict(orientation="h", yanchor="top", y=-0.18, xanchor="center", x=0.5),
         hovermode="x unified",
-        height=420,
+        height=450,
         template="plotly_white",
-        margin=dict(t=60, b=40),
+        margin=dict(t=60, b=80),
     )
     st.plotly_chart(fig, use_container_width=True)
 
